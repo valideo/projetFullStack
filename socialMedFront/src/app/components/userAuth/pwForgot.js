@@ -8,6 +8,8 @@ import InputLabel from '@material-ui/core/InputLabel';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import withStyles from '@material-ui/core/styles/withStyles';
+import ArrowBackOutlinedIcon from '@material-ui/icons/ArrowBackOutlined';
+import { Link } from 'react-router-dom';
 
 const styles = theme => ({
   main: {
@@ -49,7 +51,7 @@ function pwforgot(props) {
       <CssBaseline />
       <Paper className={classes.paper}>
         <Typography component="h1" variant="h5">
-        Forgot password
+        <Link to="/login"><ArrowBackOutlinedIcon/></Link>Forgot password
         </Typography>
         <form className={classes.form}>
           <FormControl margin="normal" required fullWidth>

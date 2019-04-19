@@ -9,10 +9,12 @@ import Checkbox from '@material-ui/core/Checkbox';
 import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
+import ArrowBackOutlinedIcon from '@material-ui/icons/ArrowBackOutlined';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import withStyles from '@material-ui/core/styles/withStyles';
-import {AostRequest} from '../../providers/apiProvider';
+import { Link } from 'react-router-dom';
+//import {AostRequest} from '../../providers/apiProvider';
 
 const styles = theme => ({
   main: {
@@ -49,19 +51,19 @@ const styles = theme => ({
 function Login(props) {
   const { classes } = props;
 
-  AostRequest({password : "test", email : "test@test.com"},"/user/login/").then(data =>{
+ /* AostRequest({password : "test", email : "test@test.com"},"/user/login/").then(data =>{
     console.log(data);
-  });
+  });*/
 
   return (
     <main className={classes.main}>
       <CssBaseline />
       <Paper className={classes.paper}>
         <Avatar className={classes.avatar}>
-          <LockOutlinedIcon />
+          <LockOutlinedIcon/>
         </Avatar>
         <Typography component="h1" variant="h5">
-          Sign in
+        <Link to="/"><ArrowBackOutlinedIcon/></Link>Sign in
         </Typography>
         <form className={classes.form}>
           <FormControl margin="normal" required fullWidth>
@@ -76,16 +78,21 @@ function Login(props) {
             control={<Checkbox value="remember" color="primary" />}
             label="Remember me"
           />
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            color="primary"
-            className={classes.submit}
-          >
-            Sign in
-          </Button>
+          <Link to="/home">
+            <Button
+              type="submit"
+              fullWidth
+              variant="contained"
+              color="primary"
+              className={classes.submit}
+            >
+              Sign in
+            </Button>
+          </Link>
         </form>
+        <Typography component="h6" variant="h6">
+          <Link to="/forgot_password">Mot de passe oublié ?</Link>
+        </Typography>
       </Paper>
     </main>
   );

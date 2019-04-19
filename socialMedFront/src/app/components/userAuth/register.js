@@ -8,6 +8,7 @@ import InputLabel from '@material-ui/core/InputLabel';
 import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import withStyles from '@material-ui/core/styles/withStyles';
+import { Link } from 'react-router-dom'
 
 const styles = theme => ({
   main: {
@@ -85,10 +86,10 @@ function Register(props) {
           >
             Sign up
           </Button>
-          <Typography component="h6" variant="h6">
-          Déjà inscrit ? Se connecter.
-        </Typography>
         </form>
+        <Typography component="h6" variant="h6">
+          Déjà inscrit ?  <Link to="/login" >Se connecter.</Link>
+        </Typography>
       </Paper>
     </main>
   );
