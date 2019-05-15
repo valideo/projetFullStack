@@ -9,6 +9,7 @@ import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import withStyles from '@material-ui/core/styles/withStyles';
 import { Link } from 'react-router-dom'
+import { postRequest } from '../../providers/apiProvider';
 
 const styles = theme => ({
   main: {
@@ -42,8 +43,41 @@ const styles = theme => ({
   },
 });
 
-function Register(props) {
-  const { classes } = props;
+class registerForm extends React.Component{
+  constructor(props){
+    super(props);
+    this.state = {
+      email : "",
+      password : "",
+      fName : "",
+      lName : "",
+      pseudo : "",
+      confPwd : ""
+    };
+
+    this.onSubmit = this.onSubmit.bind(this);
+    this.onChange = this.onChange.bind(this);
+  }
+
+  onSubmit(e){
+    e.preventDefault();
+    if(this.state.password == this.state.confPwd){
+    registerRequest({password : this.state.password, email : this.state.email, fName : this.state.fName, lName : this.state.lName, pseudo : this.state.pseudo},"/user/signup/").then(data =>{
+      console.log(data);
+      this.props.history.push('/login')
+    }, err =>{
+      console.log(err);
+    });
+    }
+  }
+
+  onChange(e){
+    this.setState({[e.target.name] : e.target.value});
+  }
+
+  render(){
+    const { classes } = this.props;
+    const {email, password, fName, lName, pseudo, confPwd}  = this.state;
 
   return (
     <main className={classes.main}>
@@ -55,27 +89,27 @@ function Register(props) {
         <form className={classes.form}>
           <FormControl margin="normal" required fullWidth>
             <InputLabel htmlFor="email">Email Address</InputLabel>
-            <Input id="email" name="email" autoComplete="email" autoFocus />
+            <Input id="email" name="email" autoComplete="email" value={email} onChange={this.onChange} autoFocus />
           </FormControl>
           <FormControl margin="normal" required fullWidth>
             <InputLabel htmlFor="password">Password</InputLabel>
-            <Input name="password" type="password" id="password" autoComplete="current-password" />
+            <Input name="password" type="password" id="password" value={password} onChange={this.onChange} autoComplete="current-password" />
           </FormControl>
           <FormControl margin="normal" required fullWidth>
             <InputLabel htmlFor="password">Confirm password</InputLabel>
-            <Input name="password" type="password" id="Cfpassword" autoComplete="current-password" />
+            <Input name="confPwd" type="password" id="confPwd" value={confPwd} onChange={this.onChange}  />
           </FormControl>
           <FormControl margin="normal" required fullWidth>
             <InputLabel htmlFor="password">Prenom</InputLabel>
-            <Input name="password" type="text" id="fName" autoComplete="current-password" />
+            <Input name="fName" type="text" id="fName" value={fName} onChange={this.onChange}/>
           </FormControl>
           <FormControl margin="normal" required fullWidth>
             <InputLabel htmlFor="password">Nom</InputLabel>
-            <Input name="password" type="text" id="lName" autoComplete="current-password" />
+            <Input name="lName" type="text" id="lName" value={lName} onChange={this.onChange} />
           </FormControl>
           <FormControl margin="normal" required fullWidth>
             <InputLabel htmlFor="password">Pseudo</InputLabel>
-            <Input name="password" type="text" id="pseudo" autoComplete="current-password" />
+            <Input name="pseudo" type="text" id="pseudo" value={pseudo} onChange={this.onChange}/>
           </FormControl>
           <Button
             type="submit"
@@ -83,6 +117,7 @@ function Register(props) {
             variant="contained"
             color="primary"
             className={classes.submit}
+            onClick={this.onSubmit}
           >
             Sign up
           </Button>
@@ -94,9 +129,10 @@ function Register(props) {
     </main>
   );
 }
+}
 
-Register.propTypes = {
+registerForm.propTypes = {
   classes: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles)(Register);
+export default withStyles(styles)(registerForm);

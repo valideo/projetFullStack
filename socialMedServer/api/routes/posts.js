@@ -2,13 +2,12 @@ const express = require('express');
 const router = express.Router();
 const Post = require ('../models/post');
 const mongoose = require('mongoose');
-const checkAuth = require('../middleware/check_auth');
+var jwtUtils  = require('../utils/jwt.utils');
 
 router.get("/", (req, res, next) => {
     Post.find()
       .exec()
       .then(docs => {
-        console.log(docs);
         res.status(200).json(docs);
       })
       .catch(err => {
@@ -19,11 +18,59 @@ router.get("/", (req, res, next) => {
       });
   });
 
-router.post('/', checkAuth, (req, res, next) => {
+router.get("/me", (req, res, next) => {
+
+  var headerAuth  = req.headers['authorization'];
+  var userId      = jwtUtils.getUserId(headerAuth);
+  console.log(userId);
+  Post.find({
+    authorId : userId
+  }).sort({date : -1})
+    .exec()
+    .then(docs => {
+      res.status(200).json(docs);
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({
+        error: err
+      });
+    });
+});
+
+router.get("/all", (req, res, next) => {
+
+  var headerAuth  = req.headers['authorization'];
+  var userId      = jwtUtils.getUserId(headerAuth);
+  console.log(userId);
+  Post.find({
+    authorId : {$ne : userId}
+  }).sort({date : -1})
+    .exec()
+    .then(docs => {
+      res.status(200).json(docs);
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json({
+        error: err
+      });
+    });
+});
+
+router.post('/', (req, res, next) => {
+  var headerAuth  = req.headers['authorization'];
+  var userId      = jwtUtils.getUserId(headerAuth);
+
+  if(userId < 0){
+    res.status(400).json({ 'error': 'wrong token' });
+  }
     const post = new Post({
         _id : new mongoose.Types.ObjectId(),
-        authorId: req.body.authorId, 
-        msg: req.body.msg 
+        authorId: userId, 
+        msg: req.body.msg,
+        picUrl : req.body.picUrl,
+        date : req.body.date
     });
     post.save().then( result =>{
         console.log(result);
@@ -57,7 +104,13 @@ router.get('/:postId', (req, res, next) => {
     });
 });
 
-router.patch("/:postId", checkAuth, (req, res, next) => {
+router.patch("/:postId", (req, res, next) => {
+  var headerAuth  = req.headers['authorization'];
+  var userId      = jwtUtils.getUserId(headerAuth);
+
+  if(userId < 0){
+    res.status(400).json({ 'error': 'wrong token' });
+  }
     const id = req.params.postId;
     const updateOps = {};
     for (const ops of req.body) {
@@ -77,7 +130,15 @@ router.patch("/:postId", checkAuth, (req, res, next) => {
       });
   });
   
-  router.delete("/:postId", checkAuth, (req, res, next) => {
+  router.delete("/:postId", (req, res, next) => {
+
+    var headerAuth  = req.headers['authorization'];
+    var userId      = jwtUtils.getUserId(headerAuth);
+
+    if(userId < 0){
+      res.status(400).json({ 'error': 'wrong token' });
+    }
+
     const id = req.params.postId;
     Post.remove({ _id: id })
       .exec()

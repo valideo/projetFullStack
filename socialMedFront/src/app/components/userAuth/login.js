@@ -14,7 +14,8 @@ import Paper from '@material-ui/core/Paper';
 import Typography from '@material-ui/core/Typography';
 import withStyles from '@material-ui/core/styles/withStyles';
 import { Link } from 'react-router-dom';
-//import {AostRequest} from '../../providers/apiProvider';
+import { loginRequest } from '../../providers/apiProvider';
+import { Route , withRouter} from 'react-router-dom';
 
 const styles = theme => ({
   main: {
@@ -48,58 +49,79 @@ const styles = theme => ({
   },
 });
 
-function Login(props) {
-  const { classes } = props;
+class loginForm extends React.Component{
+  constructor(props){
+    super(props);
+    this.state = {
+      email : "",
+      password : ""
+    };
 
- /* AostRequest({password : "test", email : "test@test.com"},"/user/login/").then(data =>{
-    console.log(data);
-  });*/
+    this.onSubmit = this.onSubmit.bind(this);
+    this.onChange = this.onChange.bind(this);
+  }
 
-  return (
-    <main className={classes.main}>
-      <CssBaseline />
-      <Paper className={classes.paper}>
-        <Avatar className={classes.avatar}>
-          <LockOutlinedIcon/>
-        </Avatar>
-        <Typography component="h1" variant="h5">
-        <Link to="/"><ArrowBackOutlinedIcon/></Link>Sign in
-        </Typography>
-        <form className={classes.form}>
-          <FormControl margin="normal" required fullWidth>
-            <InputLabel htmlFor="email">Email Address</InputLabel>
-            <Input id="email" name="email" autoComplete="email" autoFocus />
-          </FormControl>
-          <FormControl margin="normal" required fullWidth>
-            <InputLabel htmlFor="password">Password</InputLabel>
-            <Input name="password" type="password" id="password" autoComplete="current-password" />
-          </FormControl>
-          <FormControlLabel
-            control={<Checkbox value="remember" color="primary" />}
-            label="Remember me"
-          />
-          <Link to="/home">
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              color="primary"
-              className={classes.submit}
-            >
-              Sign in
-            </Button>
-          </Link>
-        </form>
-        <Typography component="h6" variant="h6">
-          <Link to="/forgot_password">Mot de passe oublié ?</Link>
-        </Typography>
-      </Paper>
-    </main>
-  );
+  onSubmit(e){
+    e.preventDefault();
+    loginRequest({password : this.state.password, email : this.state.email}).then(data =>{
+      this.props.history.push('/home');
+    }, err =>{
+      console.log(err);
+    });
+  }
+
+  onChange(e){
+    this.setState({[e.target.name] : e.target.value});
+  }
+
+  render(){
+    const { classes } = this.props;
+    const {email, password} = this.state;
+    return (
+      <main className={classes.main}>
+        <CssBaseline />
+        <Paper className={classes.paper}>
+          <Avatar className={classes.avatar}>
+            <LockOutlinedIcon/>
+          </Avatar>
+          <Typography component="h1" variant="h5">
+          <Link to="/"><ArrowBackOutlinedIcon/></Link>Sign in
+          </Typography>
+          <form className={classes.form}>
+            <FormControl margin="normal" required fullWidth>
+              <InputLabel htmlFor="email">Email Address</InputLabel>
+              <Input name="email" autoComplete="email" value={email} onChange={this.onChange} autoFocus />
+            </FormControl>
+            <FormControl margin="normal" required fullWidth>
+              <InputLabel htmlFor="password">Password</InputLabel>
+              <Input name="password" type="password" onChange={this.onChange} value={password} autoComplete="current-password" />
+            </FormControl>
+            <FormControlLabel
+              control={<Checkbox value="remember" color="primary" />}
+              label="Remember me"
+            />
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                color="primary"
+                className={classes.submit}
+                onClick={this.onSubmit}
+              >
+                Sign in
+              </Button>
+          </form>
+          <Typography component="h6" variant="h6">
+            <Link to="/forgot_password">Mot de passe oublié ?</Link>
+          </Typography>
+        </Paper>
+      </main>
+    );
+  }
+
 }
 
-Login.propTypes = {
+loginForm.propTypes = {
   classes: PropTypes.object.isRequired,
 };
-
-export default withStyles(styles)(Login);
+export default withRouter((withStyles(styles)(loginForm)))

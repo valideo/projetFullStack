@@ -7,6 +7,10 @@ const UserSchema = mongoose.Schema({
     fName: {type : String, required : true},
     lName: {type : String, required : true},
     pseudo: {type : String, required : true},
+    profilePic: {type : String, required : false},
+    friendsList : {type : String},
+    friendsRequestsReceived : {type : String},
+    friendsRequestsSent : {type : String},
     
 });
 

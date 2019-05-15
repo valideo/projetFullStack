@@ -8,7 +8,7 @@ import { MuiThemeProvider, createMuiTheme } from '@material-ui/core/styles';
 import Login from "./components/userAuth/login";
 import Register from "./components/userAuth/register";
 import pwForgot from "./components/userAuth/pwForgot";
-import Structure from "./components/main/Structure";
+import Main from "./components/main/Main"
 
 
 class App extends React.Component{
@@ -24,11 +24,11 @@ class App extends React.Component{
             
             <Router>
                 <MuiThemeProvider theme={theme}>
-                <Route exact path="/" component={Structure}/>
+                <Route exact path="/home" component={Main}/>
                 <Grid container wrap="nowrap" spacing={24}>
                     <Grid item xs={4}></Grid>
                     <Grid item xs={4} zeroMinWidth>
-                        <Route exact path="/register" component={Register}/>
+                        <Route exact path="/" component={Register}/>
                         <Route path="/login" component={Login}/>
                         <Route path="/forgot_password" component={pwForgot}/>
                     </Grid>

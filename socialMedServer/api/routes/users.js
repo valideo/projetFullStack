@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
+var jwtUtils  = require('../utils/jwt.utils');
 
 
 const User = require("../models/user");
@@ -66,16 +66,7 @@ router.post("/login", (req, res, next) => {
             });
           }
           if (result) {
-            const token = jwt.sign(
-              {
-                email: user[0].email,
-                userId: user[0]._id
-              },
-              "valideo",
-              {
-                  expiresIn: "1h"
-              }
-            );
+            const token = jwtUtils.generateTokenForUser(user[0]);
             return res.status(200).json({
               message: "Auth successful",
               token: token
@@ -85,6 +76,303 @@ router.post("/login", (req, res, next) => {
             message: "Auth failed"
           });
         });
+      })
+      .catch(err => {
+        console.log(err);
+        res.status(500).json({
+          error: err
+        });
+      });
+  });
+
+  router.get("/me", (req, res, next) => {
+
+    var headerAuth  = req.headers['authorization'];
+    var userId      = jwtUtils.getUserId(headerAuth);
+    console.log(userId);
+    User.find({
+      _id : userId
+    })
+      .exec()
+      .then(docs => {
+        res.status(200).json(docs);
+      })
+      .catch(err => {
+        console.log(err);
+        res.status(500).json({
+          error: err
+        });
+      });
+  });
+
+  router.get("/find/:id", (req, res, next) => {
+
+    var idUser = req.params.id;
+    User.findOne({
+      _id : idUser
+    })
+      .exec()
+      .then(docs => {
+        res.status(200).json(docs);
+      })
+      .catch(err => {
+        console.log(err);
+        res.status(500).json({
+          error: err
+        });
+      });
+  });
+
+  router.get("/:searchString", (req, res, next) => {
+
+    var searchQuery = req.params.searchString;
+    console.log(searchQuery);
+    User.find({ $or: [ {fName : {$regex: searchQuery, $options : 'i'}}, {lName : {$regex: searchQuery, $options : 'i'}}, {pseudo : {$regex: searchQuery, $options : 'i'}}]}).limit(5)
+      .exec()
+      .then(docs => {
+        res.status(200).json(docs);
+      })
+      .catch(err => {
+        console.log(err);
+        res.status(500).json({
+          error: err
+        });
+      });
+  });
+
+  router.put("/me", (req, res, next) => {
+
+    var headerAuth  = req.headers['authorization'];
+    var userId      = jwtUtils.getUserId(headerAuth);
+    console.log(userId);
+    User.findByIdAndUpdate({_id : userId}, req.body)
+      .exec()
+      .then(docs => {
+        User.findOne({_id : userId})
+        .exec()
+        .then(userUpdated =>{
+          res.status(200).json(userUpdated);
+        })
+        .catch(err => {
+          console.log(err);
+          res.status(500).json({
+            error: err
+          });
+        })
+      })
+      .catch(err => {
+        console.log(err);
+        res.status(500).json({
+          error: err
+        });
+      });
+  });
+
+  router.put("/addFriend", (req, res, next) => {
+
+    var headerAuth  = req.headers['authorization'];
+    var userId      = jwtUtils.getUserId(headerAuth);
+    console.log(userId);
+    User.updateOne({_id : userId}, { $addToSet: { friendsList: req.body.friends } })
+      .exec()
+      .then(docs => {
+        User.findOne({_id : userId})
+        .exec()
+        .then(userUpdated =>{
+          User.updateOne({_id : req.body.friends}, { $addToSet: { friendsList: userId } })
+          .exec()
+          .then(docs => {
+            User.findOne({_id : userId})
+            .exec()
+            .then(userUpdated =>{
+              User.updateOne({_id : userId}, { $pull: { friendsRequestsReceived: req.body.friends } })
+              .exec()
+              .then(docs => {
+                User.findOne({_id : userId})
+                .exec()
+                .then(userUpdated =>{
+                  User.updateOne({_id : req.body.friends}, { $pull: { friendsRequestsSent: userId } })
+                  .exec()
+                  .then(docs => {
+                    User.findOne({_id : userId})
+                    .exec()
+                    .then(userUpdated =>{
+                      res.status(200).json(userUpdated);
+                    })
+                    .catch(err => {
+                      console.log(err);
+                      res.status(500).json({
+                        error: err
+                      });
+                    })
+                  })
+                  .catch(err => {
+                    console.log(err);
+                    res.status(500).json({
+                      error: err
+                    });
+                  });
+                })
+                .catch(err => {
+                  console.log(err);
+                  res.status(500).json({
+                    error: err
+                  });
+                })
+              })
+              .catch(err => {
+                console.log(err);
+                res.status(500).json({
+                  error: err
+                });
+              });
+            })
+            .catch(err => {
+              console.log(err);
+              res.status(500).json({
+                error: err
+              });
+            })
+          })
+          .catch(err => {
+            console.log(err);
+            res.status(500).json({
+              error: err
+            });
+          });
+        })
+        .catch(err => {
+          console.log(err);
+          res.status(500).json({
+            error: err
+          });
+        })
+      })
+      .catch(err => {
+        console.log(err);
+        res.status(500).json({
+          error: err
+        });
+      });
+  });
+
+  router.put("/requestFriend", (req, res, next) => {
+
+    var headerAuth  = req.headers['authorization'];
+    var userId      = jwtUtils.getUserId(headerAuth);
+    console.log(userId);
+    User.updateOne({_id : userId}, { $addToSet: { friendsRequestsSent: req.body.friends } })
+      .exec()
+      .then(docs => {
+        User.findOne({_id : userId})
+        .exec()
+        .then(userUpdated =>{
+          res.status(200).json(userUpdated);
+          User.updateOne({_id : req.body.friends}, { $addToSet: { friendsRequestsReceived: userId } })
+          .exec()
+          .then(docs => {
+            User.findOne({_id : userId})
+            .exec()
+            .then(userUpdated =>{
+              res.status(200).json(userUpdated);
+            })
+            .catch(err => {
+              console.log(err);
+              res.status(500).json({
+                error: err
+              });
+            })
+          })
+          .catch(err => {
+            console.log(err);
+            res.status(500).json({
+              error: err
+            });
+          });
+        })
+        .catch(err => {
+          console.log(err);
+          res.status(500).json({
+            error: err
+          });
+        })
+      })
+      .catch(err => {
+        console.log(err);
+        res.status(500).json({
+          error: err
+        });
+      });
+  });
+
+  router.put("/removeFriend", (req, res, next) => {
+
+    var headerAuth  = req.headers['authorization'];
+    var userId      = jwtUtils.getUserId(headerAuth);
+    console.log(userId);
+    User.updateOne({_id : userId}, { $pull: { friendsList: req.body.friends } })
+      .exec()
+      .then(docs => {
+        User.findOne({_id : userId})
+        .exec()
+        .then(userUpdated =>{
+          res.status(200).json(userUpdated);
+        })
+        .catch(err => {
+          console.log(err);
+          res.status(500).json({
+            error: err
+          });
+        })
+      })
+      .catch(err => {
+        console.log(err);
+        res.status(500).json({
+          error: err
+        });
+      });
+  });
+
+  router.put("/removeRequestFriend", (req, res, next) => {
+
+    var headerAuth  = req.headers['authorization'];
+    var userId      = jwtUtils.getUserId(headerAuth);
+    console.log(userId);
+    User.updateOne({_id : userId}, { $pull: { friendsRequestsReceived: req.body.friends } })
+      .exec()
+      .then(docs => {
+        User.findOne({_id : userId})
+        .exec()
+        .then(userUpdated =>{
+          res.status(200).json(userUpdated);
+          User.updateOne({_id : req.body.friends}, { $pull: { friendsRequestsSent: userId } })
+          .exec()
+          .then(docs => {
+            User.findOne({_id : userId})
+            .exec()
+            .then(userUpdated =>{
+              res.status(200).json(userUpdated);
+            })
+            .catch(err => {
+              console.log(err);
+              res.status(500).json({
+                error: err
+              });
+            })
+          })
+          .catch(err => {
+            console.log(err);
+            res.status(500).json({
+              error: err
+            });
+          });
+        })
+        .catch(err => {
+          console.log(err);
+          res.status(500).json({
+            error: err
+          });
+        })
       })
       .catch(err => {
         console.log(err);
